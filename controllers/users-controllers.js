@@ -6,6 +6,7 @@ const User = require('../models/user_model')
 const mongoose = require('mongoose')
 const Post = require('../models/post_model')
 const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
 
 const getUsers = async (req, res, next) => {
     const uid = req.params.uid //This contains the user id of the user requested
@@ -42,7 +43,7 @@ const signup = async (req, res, next) => {
 
     let hashedPassword
     try {
-    hashedPassword = await bcrypt.hash(password, 12)
+        hashedPassword = await bcrypt.hash(password, 12)
     } catch (err) {
         const error = new HttpError('Could not create Password, please try again.', 500)
         return next(error)
@@ -51,7 +52,7 @@ const signup = async (req, res, next) => {
     const createdUser = new User({
         name,
         email,
-        password,
+        password: hashedPassword,
         image: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8dXNlcnxlbnwwfHwwfHw%3D&w=1000&q=80",
         age: age,
         contact: contact,
@@ -68,8 +69,22 @@ const signup = async (req, res, next) => {
         return next(error)
     }
 
+    let token
+    try {
+        token = jwt.sign(
+            { userId: createdUser.id, email: createdUser.email },
+            'supersecret_dont_share',
+            { expiresIn: '1h' }
+        )
+    } catch (err) {
+        const error = new HttpError('Signing up failed, please try again later.', 500)
+        return next(error)
+    }
+
     res.status(201).json({
-        user: createdUser.toObject({ getters: true })
+        userId: createdUser.id, 
+        email: createdUser.email,
+        token: token
     })
 }
 
@@ -88,12 +103,32 @@ const login = async (req, res, next) => {
     console.log(password)
     console.log(existingUser.password)
 
-    if (existingUser.password !== password) {
+    let isValidPassword = false
+    try {
+        isValidPassword = await bcrypt.compare(password, existingUser.password)
+    } catch (err) {
+        const error = new HttpError('Could not log you in, please check your credentials and try again.', 500)
+        return next(error)
+    }
+
+    if(!isValidPassword) {
         const error = new HttpError('Invalid credentials, could not log you in.', 401)
         return next(error)
     }
 
-    res.json({ message: "Logged in!", user: existingUser.toObject({ getters: true }) })
+    let token
+    try {
+        token = jwt.sign(
+            { userId: existingUser.id, email: existingUser.email },
+            'supersecret_dont_share',
+            { expiresIn: '1h' }
+        )
+    } catch (err) {
+        const error = new HttpError('Logging in failed, please try again later.', 500)
+        return next(error)
+    }
+
+    res.json({ userId: existingUser.id, email: existingUser.email , token: token })
 }
 
 const followUser = async (req, res, next) => {
