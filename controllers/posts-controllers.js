@@ -68,5 +68,64 @@ const createPost = async (req, res, next) => {
     res.status(201).json({ post: createdPost })
 }
 
+/*Write a function to add a user to the Upvotes array in a given post */
+const UpvotePost= async (req, res, next) => {
+    const u_id = req.params.uid //Obtain the User Id from the request -> Encoded in the URL
+    const p_id = req.params.pid //Obtain the Place Id from the request -> Encoded in the URL
+
+    let post;
+    try {
+        post = await Post.findById(p_id)
+    } catch (err) {
+        const error = new HttpError('Something went wrong, could not find a post.', 500)
+        return next(error)
+    }
+
+    if (!post) {
+        const error = new HttpError('Could not find a post for the provided id.', 404)
+        return next(error)
+    }
+
+    try {
+        post.Upvotes.push(u_id)
+        await post.save()
+    } catch (err) {
+        new HttpError('Something went wrong, could not upvote a post.', 500)
+    }
+
+    res.status(201).json({ post: post })
+}
+
+/*Write a function to add a user to the Downvotes array in a given post */
+const DownvotePost= async (req, res, next) => {
+    const u_id = req.params.uid //Obtain the User Id from the request -> Encoded in the URL
+    const p_id = req.params.pid //Obtain the Place Id from the request -> Encoded in the URL
+
+    let post;
+    try {
+        post = await Post.findById(p_id)
+    }
+    catch (err) {
+        const error = new HttpError('Something went wrong, could not find a post.', 500)
+        return next(error)
+    }
+
+    if (!post) {
+        const error = new HttpError('Could not find a post for the provided id.', 404)
+        return next(error)
+    }
+
+    try {
+        post.Downvotes.push(u_id)
+        await post.save()
+    } catch (err) {
+        new HttpError('Something went wrong, could not downvote a post.', 500)
+    }
+
+    res.status(201).json({ post: post })
+}
+
 exports.createPost = createPost
 exports.getPost = getPost
+exports.UpvotePost = UpvotePost
+exports.DownvotePost = DownvotePost

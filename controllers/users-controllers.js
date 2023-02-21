@@ -5,6 +5,7 @@ const HttpError = require('../models/http-error')
 const User = require('../models/user_model')
 const mongoose = require('mongoose')
 const Post = require('../models/post_model')
+const bcrypt = require('bcryptjs')
 
 const getUsers = async (req, res, next) => {
     const uid = req.params.uid //This contains the user id of the user requested
@@ -36,6 +37,14 @@ const signup = async (req, res, next) => {
     if (existingUser == 0) {
         console.log(existingUser)
         const error = new HttpError('User exists already, please login instead.', 422)
+        return next(error)
+    }
+
+    let hashedPassword
+    try {
+    hashedPassword = await bcrypt.hash(password, 12)
+    } catch (err) {
+        const error = new HttpError('Could not create Password, please try again.', 500)
         return next(error)
     }
 
@@ -121,6 +130,11 @@ const followUser = async (req, res, next) => {
     try {
         const sess = await mongoose.startSession();
         sess.startTransaction();
+        //Check if user is aldready following the user
+        if (user.following.includes(posted_By_User)) {
+            const error = new HttpError('You are already following this user', 500)
+            return next(error)
+        }
         user.following.push(posted_By_User);
         posted_By_User.followers.push(user);
         await posted_By_User.save({ session: sess });
