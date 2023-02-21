@@ -9,6 +9,8 @@ router.get('/users/:uid', placesController.getPlaceByUid)
 router.post('/', placesController.createPlace)
 router.patch('/:pid', placesController.UpdatePlace)
 router.delete('/:pid', placesController.DeletePlace)
+router.get('/users/:uid/my', placesController.getSpecificPlaceByUid)
+router.patch('/request/:pid', placesController.requestPlace)
 //When you try to enter this -> There is no way to access because all browser requests are GET requests
 //Use API's -> Postman
 

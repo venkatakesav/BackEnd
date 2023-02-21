@@ -11,6 +11,7 @@ const placeSchema = new Schema({
     creator: {type: mongoose.Types.ObjectId, required: true, ref: "User"},
     followers: [{type: mongoose.Types.ObjectId, required: true, ref: "User"}],
     requests: [{type: mongoose.Types.ObjectId, required: true, ref: "User"}],
+    blocked: [{type: mongoose.Types.ObjectId, required: true, ref: "User"}],
     creation_date: {type: Date, required: true, default: Date.now},
     rejected: [{type: mongoose.Types.ObjectId, required: true, ref: "User"}],
     posts: [{type: mongoose.Types.ObjectId, required: true, ref: "Post"}]

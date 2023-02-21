@@ -164,8 +164,64 @@ const DeletePlace = async (req, res, next) => {
     res.status(200).json({ message: "Place Deleted" })
 }
 
+const getSpecificPlaceByUid = async (req, res, next) => {
+    const u_id = req.params.uid //Obtain the placeId from the request -> Encoded in the URL
+
+    let places_user;
+    try {
+        places_user = Place.find({creator: u_id})
+    } catch (err) {
+        const error = new HttpError('Something went wrong, could not find a place.', 500)
+        return next(error)
+    }
+
+    if (!places_user || places_user.length === 0) {
+        // console.log("No place found")
+        const error = new HttpError('Could not find a place for the provided id.', 404)
+        // return next(error)
+        return next(error)
+    }
+
+    res.json({ places_user: (await places_user).map(place => place.toObject({ getters: true })) })
+}
+
+const requestPlace = async (req, res, next) => {
+    //Obtain the placeId from the request -> Encoded in the URL
+    const placeId = req.params.pid
+    //Obtain the User Id from body
+    const { userId } = req.body
+
+    let place;
+    console.log(placeId)
+    try {
+        place = await Place.findById(placeId)
+    }catch(err){
+        const error = new HttpError('Something went wrong, could not request place.', 500)
+        return next(error)
+    }
+
+    if(!place){
+        const error = new HttpError('Could not find place for this id.', 404)
+        return next(error)
+    }
+
+    try{
+        place.requests.push(userId)
+        await place.save()
+    }catch(err){
+        const error = new HttpError('Something went wrong, could not request place.', 500)
+        return next(error)
+    }
+
+    res.status(200).json({ place: place.toObject({ getters: true }) }) //Return the updated place
+}
+
+
+
 exports.UpdatePlace = UpdatePlace //Export the UpdatePlace function
 exports.getPlaceByPid = getPlaceByPid; //Basically you export a pointer to that function
 exports.getPlaceByUid = getPlaceByUid //Basically you export a pointer to that function -> Express decides when to call it
 exports.createPlace = createPlace
 exports.DeletePlace = DeletePlace
+exports.getSpecificPlaceByUid = getSpecificPlaceByUid
+exports.requestPlace = requestPlace
