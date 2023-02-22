@@ -9,6 +9,8 @@ const getPost = async (req, res, next) => {
     const userId = req.params.uid //Obtain the userId from the request -> Encoded in the URL
     const PlaceId = req.params.pid //Obtain the userId from the request -> Encoded in the URL
 
+    console.log("Hello")
+
     let posts;
     try {
         posts = await Post.find()
@@ -27,6 +29,44 @@ const getPost = async (req, res, next) => {
     // console.log("GET Request to the homepage -> Places_routes");
 }
 
+/*Write code to save a post to the user who is logged in*/
+const savePost = async (req, res, next) => {
+    const userId = req.params.uid //Obtain the userId from the request -> Encoded in the URL
+    const postId = req.body.post_id //Obtain the userId from the request -> Encoded in the URL
+
+    let user;
+    try {
+        user = await User.findById(userId)
+    } catch (err) {
+        const error = new HttpError('Something went wrong, could not find a user.', 500)
+        return next(error)
+    }
+
+    let post;
+    try {
+        post = await Post.findById(postId)
+    } catch (err) {
+        const error = new HttpError('Something went wrong, could not find a post.', 500)
+        return next(error)
+    }
+
+    // console.log(user.saved_posts + " 53")
+    console.log(postId)
+
+    try {
+        if (!user.saved_posts.includes(postId)) {
+            user.saved_posts.push(postId)
+        }
+        await user.save()
+    } catch (err) {
+        const error = new HttpError('Something went wrong, could not save a post.', 500)
+        return next(error)
+    }
+
+    console.log("Saved Post")
+
+    res.status(201).json({ user: user.toObject({ getters: true }) })
+}
 
 const createPost = async (req, res, next) => {
     const u_id = req.params.uid //Obtain the User Id from the request -> Encoded in the URL
@@ -69,7 +109,7 @@ const createPost = async (req, res, next) => {
 }
 
 /*Write a function to add a user to the Upvotes array in a given post */
-const UpvotePost= async (req, res, next) => {
+const UpvotePost = async (req, res, next) => {
     const u_id = req.params.uid //Obtain the User Id from the request -> Encoded in the URL
     const p_id = req.params.pid //Obtain the Place Id from the request -> Encoded in the URL
 
@@ -97,7 +137,7 @@ const UpvotePost= async (req, res, next) => {
 }
 
 /*Write a function to add a user to the Downvotes array in a given post */
-const DownvotePost= async (req, res, next) => {
+const DownvotePost = async (req, res, next) => {
     const u_id = req.params.uid //Obtain the User Id from the request -> Encoded in the URL
     const p_id = req.params.pid //Obtain the Place Id from the request -> Encoded in the URL
 
@@ -125,7 +165,41 @@ const DownvotePost= async (req, res, next) => {
     res.status(201).json({ post: post })
 }
 
+/*Get the Saved posts */
+const getsavedPosts = async (req, res, next) => {
+    const userId = req.params.uid //Obtain the userId from the request -> Encoded in the URL
+
+    let user;
+    try {
+        user = await User.findById(userId)
+    } catch (err) {
+        const error = new HttpError('Something went wrong, could not find a user.', 500)
+        return next(error)
+    }
+
+    if (!user) {
+        // console.log("No place found")
+        const error = new HttpError('Could not find saved Posts.', 404)
+        return next(error)
+    }
+
+    let posts = [];
+
+    console.log(user)
+    user.saved_posts.map(async (element) => {
+        try {
+            posts.push(await Post.findById(element))
+        } catch (err) {
+            console.log(err)
+        }
+    })
+
+    res.json({ posts: (await posts).map(post => post.toObject({ getters: true })) })
+}
+
 exports.createPost = createPost
 exports.getPost = getPost
 exports.UpvotePost = UpvotePost
 exports.DownvotePost = DownvotePost
+exports.savePost = savePost
+exports.getsavedPosts = getsavedPosts

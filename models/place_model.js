@@ -14,7 +14,7 @@ const placeSchema = new Schema({
     blocked: [{type: mongoose.Types.ObjectId, required: true, ref: "User"}], 
     creation_date: {type: Date, required: true, default: Date.now},
     rejected: [{type: mongoose.Types.ObjectId, required: true, ref: "User"}],
-    posts: [{type: mongoose.Types.ObjectId, required: true, ref: "Post"}]
+    posts: [{type: mongoose.Types.ObjectId, required: true, ref: "Post"}],
 });
 
 module.exports = mongoose.model('Place', placeSchema)

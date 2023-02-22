@@ -12,7 +12,8 @@ const userSchema = new Schema({
     places: [{type: mongoose.Types.ObjectId, required: true, ref: "Place"}], //An Array of Places Owned
     places_following: [{type: mongoose.Types.ObjectId, required: true, ref: "Place"}], //An Array of Places Followed
     followers: [{type: mongoose.Types.ObjectId, required: true, ref: "User"}], //An Array of Users Following
-    following: [{type: mongoose.Types.ObjectId, required: true, ref: "User"}] //An Array of Users Followed
+    following: [{type: mongoose.Types.ObjectId, required: true, ref: "User"}], //An Array of Users Followed
+    saved_posts: [{type: mongoose.Types.ObjectId, required: true, ref: "Post"}],
 });
 
 userSchema.plugin(uniqueValidator);
